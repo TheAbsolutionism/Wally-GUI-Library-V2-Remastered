@@ -1,3 +1,16 @@
+--[[
+    [Fixed]
+    - When Turning Toggle Off, instead of turning the "flag" nil, will turn it false;
+    - Made it where it returns "Section" So you could change its properties; (Same with Label);
+    - Fixed where :Label, wouldnt be in the order supposed to be
+    [Added]
+    + Added where you can add TextLabels (Including Sections) and TextButtons to rainbow; (Changes TextColor3)
+    + Added where you can set Dropdown to a selected one or does 1st selection in list provided;
+    + Added where you change ToggleDisplay between Color Fill or CheckMark, library.options.toggledisplay = 'Fill' or 'Check';
+    + Added a Drop Section
+    
+]]
+
 local library = {count = 0, queue = {}, callbacks = {}, rainbowtable = {}, toggled = true, binds = {}};
     local defaults; do
         local dragger = {}; do
