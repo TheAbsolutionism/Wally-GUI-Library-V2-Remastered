@@ -7,7 +7,8 @@
     + Added where you can add TextLabels (Including Sections) and TextButtons to rainbow; (Changes TextColor3)
     + Added where you can set Dropdown to a selected one or does 1st selection in list provided;
     + Added where you change ToggleDisplay between Color Fill or CheckMark, library.options.toggledisplay = 'Fill' or 'Check';
-    + Added a Drop Section
+    + Added a Drop Section;
+    + Added Box for Slider; (Type in number)
     
 ]]
 
@@ -609,20 +610,23 @@ local library = {count = 0, queue = {}, callbacks = {}, rainbowtable = {}, toggl
                             Size = UDim2.new(0, 60, 0, 20);
                             Position = UDim2.new(1, -65, 0, 3);
                             BackgroundTransparency = 1;
-                            --BorderColor3 = library.options.bordercolor;
+                            BorderColor3 = library.options.bordercolor;
                             BorderSizePixel = 0;
-                            library:Create('TextLabel', {
+                            library:Create('TextBox', {
                                 Name = 'ValueLabel';
                                 Text = default;
-                                BackgroundTransparency = 1;
+                                --BackgroundTransparency = 1;
                                 TextColor3 = library.options.textcolor;
-                                Position = UDim2.new(0, -10, 0, 0);
-                                Size     = UDim2.new(0, 1, 1, 0);
+                                Position = UDim2.new(0, -35, 0, 0);
+                                Size     = UDim2.new(0,30,0,20);
                                 TextXAlignment = Enum.TextXAlignment.Right;
                                 Font = library.options.font;
                                 TextSize = library.options.fontsize;
                                 TextStrokeTransparency = library.options.textstroke;
                                 TextStrokeColor3 = library.options.strokecolor;
+                                BackgroundColor3 = library.options.boxcolor;
+                                BorderColor3 = library.options.bordercolor;
+                                PlaceholderColor3 = library.options.placeholdercolor;
                             });
                             library:Create('TextButton', {
                                 Name = 'Button';
@@ -650,6 +654,38 @@ local library = {count = 0, queue = {}, callbacks = {}, rainbowtable = {}, toggl
                 });
     
                 local overlay = check:FindFirstChild(name);
+
+                local box = overlay:FindFirstChild('Container'):FindFirstChild('ValueLabel');
+                box.FocusLost:connect(function(e)
+                    local old = location[flag];
+                    local num = tonumber(box.Text)
+                    if (not num) then
+                        box.Text = tonumber(location[flag])
+                    else
+                        if num < min then
+                            num = min
+                        elseif num > max then
+                            num = max
+                        end
+
+                        local percent = 1 - ((max - num) / (max - min))
+                        local number  = num 
+    
+                        number = tonumber(string.format("%.2f", number))
+                        if (not precise) then
+                            number = math.floor(number)
+                        end
+    
+                        overlay.Container.Button.Position  = UDim2.new(math.clamp(percent, 0, 0.99), 0,  0, 1) 
+                        box.Text  = number
+                        location[flag] = number
+                        callback(number)
+                    end
+                end)
+                
+                box:GetPropertyChangedSignal('Text'):connect(function()
+                    box.Text = string.gsub(box.Text, "[%a+]", "");
+                end)
     
                 local renderSteppedConnection;
                 local inputBeganConnection;
@@ -674,7 +710,7 @@ local library = {count = 0, queue = {}, callbacks = {}, rainbowtable = {}, toggl
                             local num = min + (max - min) * percent
                             local value = (precise and num or math.floor(num))
     
-                            overlay.Container.ValueLabel.Text = value;
+                            box.Text = value;
                             callback(tonumber(value))
                             location[flag] = tonumber(value)
                         end)
@@ -709,6 +745,12 @@ local library = {count = 0, queue = {}, callbacks = {}, rainbowtable = {}, toggl
                 end)    
     
                 if default ~= min then
+                    if default < min then
+                        default = min
+                    elseif default > max then
+                        default = max
+                    end
+
                     local percent = 1 - ((max - default) / (max - min))
                     local number  = default 
     
@@ -718,12 +760,18 @@ local library = {count = 0, queue = {}, callbacks = {}, rainbowtable = {}, toggl
                     end
     
                     overlay.Container.Button.Position  = UDim2.new(math.clamp(percent, 0, 0.99), 0,  0, 1) 
-                    overlay.Container.ValueLabel.Text  = number
+                    box.Text  = number
                 end
     
                 self:Resize();
                 return {
                     Set = function(value)
+                        if value < min then
+                            value = min
+                        elseif value > max then
+                            value = max
+                        end
+
                         local percent = 1 - ((max - value) / (max - min))
                         local number  = value 
     
@@ -733,7 +781,7 @@ local library = {count = 0, queue = {}, callbacks = {}, rainbowtable = {}, toggl
                         end
     
                         overlay.Container.Button.Position  = UDim2.new(math.clamp(percent, 0, 0.99), 0,  0, 1) 
-                        overlay.Container.ValueLabel.Text  = number
+                        box.Text  = number
                         location[flag] = number
                         callback(number)
                     end
@@ -996,7 +1044,7 @@ local library = {count = 0, queue = {}, callbacks = {}, rainbowtable = {}, toggl
                     
                     input = game:GetService('UserInputService').InputBegan:connect(function(a)
                         if a.UserInputType == Enum.UserInputType.MouseButton1 and (not isInGui(container)) then
-                            check:FindFirstChild('dropdown_lbl'):WaitForChild('Selection').TextColor3 = library.options.textcolor
+                            check:FindFirstChild('dropdown_lbl'):WaitForChild('Selection').TextColor3 = colors[v] or library.options.textcolor
                             check:FindFirstChild('dropdown_lbl'):WaitForChild('Selection').Text       = location[flag];
     
                             container:TweenSize(UDim2.new(1, 0, 0, 0), 'In', 'Quad', 0.15, true)
